@@ -3,10 +3,11 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 #include <time.h>
+#include <sys/time.h>
 
 display_t display = {};
 SemaphoreHandle_t display_mutex;
-int last_min = 0;
+int last_min = -200;
 
 void display_process(void *) {
 	while(1)
@@ -32,16 +33,16 @@ void clock_process(void *) {
 			display_panel_set_text(&display.panel, panel_text);
 			display_tube_set_text(&display.tube, tube_text);
 			xSemaphoreGive(display_mutex);
+			last_min = ts->tm_min;
 		}
-		vTaskDelay(pdMS_TO_TICKS(100));
+		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }
 
 void app_main(void)
 {
-	time_t tim = time(NULL);
-	struct tm *ts = localtime(&tim);
-	last_min = ts->tm_min;
+	struct timeval tv = { 1794409903+3600*3+180, 0 };
+	settimeofday(&tv, NULL);
 	display_mutex = xSemaphoreCreateMutex();
 	if (!display_mutex) {
 		ESP_LOGE("main", "Failed to create mutex");
@@ -51,6 +52,8 @@ void app_main(void)
 
 	display_panel_set_mnemonic(&display.panel, 1, DISPLAY_PANEL_MNEMONIC_UDOT | DISPLAY_PANEL_MNEMONIC_LDOT);
 
+	ESP_LOGI("main", "task1");
+	xTaskCreate(clock_process, "clock_process", 4096, NULL, 6, NULL);
+	ESP_LOGI("main", "task2");
 	xTaskCreate(display_process, "display_process", 4096, NULL, 5, NULL);
-	xTaskCreate(display_process, "clock_process", 4096, NULL, 6, NULL);
 }

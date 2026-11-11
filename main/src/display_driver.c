@@ -10,7 +10,7 @@
 #include <string.h>
 
 #define N_SEGMENTS	7
-#define MAX_DUTY	100
+#define MAX_DUTY	130
 #define PWM_CHANNEL	LEDC_CHANNEL_0
 
 typedef int segments_mask_t[N_SEGMENTS];

@@ -2,6 +2,8 @@
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.22)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")
+
 set(CMAKE_PROJECT_INCLUDE "${CMAKE_CURRENT_LIST_DIR}/cmake/clangd_picolibc.cmake")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

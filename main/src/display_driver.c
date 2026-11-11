@@ -1,22 +1,16 @@
 #include "display_driver.h"
 #include "driver/gpio.h"
-#include "esp_log.h"
 #include "driver/ledc.h"
-#include "freertos/idf_additions.h"
-#include "esp_adc/adc_oneshot.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/projdefs.h"
 #include "freertos/task.h"
 #include "hal/ledc_types.h"
 #include <assert.h>
-#include <ctype.h>
 #include <limits.h>
-#include <stdint.h>
 #include <time.h>
 #include <string.h>
 
 #define N_SEGMENTS	7
-#define MAX_DUTY	180
+#define MAX_DUTY	100
 #define PWM_CHANNEL	LEDC_CHANNEL_0
 
 typedef int segments_mask_t[N_SEGMENTS];
@@ -108,7 +102,7 @@ static const int PANEL_DIGIT_ORDER_FROM_BIT[DISPLAY_MASK_BIT_COUNT] =
 	[DISPLAY_MASK_BIT_PANEL_GRID_MNEMONIC] = 5
 };
 
-static const int TUBE_DIGIT_ORDER_FROM_BIT[DISPLAY_TUBE_N_DIGITS] =
+static const int TUBE_DIGIT_BIT_FROM_ORDER[DISPLAY_TUBE_N_DIGITS] =
 {
 	[0] = DISPLAY_MASK_BIT_TUBE_GRID_1,
 	[1] = DISPLAY_MASK_BIT_TUBE_GRID_2,
@@ -121,7 +115,7 @@ static const int TUBE_DIGIT_ORDER_FROM_BIT[DISPLAY_TUBE_N_DIGITS] =
 	[8] = DISPLAY_MASK_BIT_TUBE_GRID_MNEMONIC
 };
 
-static const int TUBE_DIGIT_BIT_FROM_ORDER[DISPLAY_MASK_BIT_COUNT] =
+static const int TUBE_DIGIT_ORDER_FROM_BIT[DISPLAY_MASK_BIT_COUNT] =
 {
 	[DISPLAY_MASK_BIT_TUBE_GRID_1] = 0,
 	[DISPLAY_MASK_BIT_TUBE_GRID_2] = 1,
@@ -174,7 +168,7 @@ display_t display_init(display_pinout_t pinout)
 			.speed_mode = LEDC_HIGH_SPEED_MODE,
 			.duty_resolution = LEDC_TIMER_8_BIT,
 			.timer_num = LEDC_TIMER_0,
-			.freq_hz = 5000,
+			.freq_hz = 20000,
 			.clk_cfg = RMT_CLK_SRC_APB
 			});
 
@@ -283,17 +277,19 @@ void display_tube_set_text(display_tube_t *tube, const display_tube_text_t text)
 	assert(tube); assert(text);
 	assert(strlen(text) >= DISPLAY_TUBE_N_NUMBER_DIGITS);
 
-	for(size_t i = 0; i < DISPLAY_TUBE_N_NUMBER_DIGITS; i++)
+	size_t j = 0;
+	for(size_t i = 0; i < DISPLAY_TUBE_N_NUMBER_DIGITS; i++, j++)
 	{
-		if(text[i] == '.')
+		if(text[j] == '.')
 		{
 			assert(i > 0 && "Invalid text");
 			tube->digits[i-1].mask[DISPLAY_MASK_BIT_TUBE_H] = 1;
+			j++;
 		}
 		else if(i > 0)
 			tube->digits[i-1].mask[DISPLAY_MASK_BIT_TUBE_H] = 0;
 
-		display_mask_tube_set_symbol(tube->digits[i].mask, text[i]);
+		display_mask_tube_set_symbol(tube->digits[i].mask, text[j]);
 	}
 }
 

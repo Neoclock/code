@@ -23,18 +23,17 @@ void clock_process(void *) {
 	while (1) {
 		time_t current_time = time(NULL);
 		struct tm *ts = localtime(&current_time);
-		if (ts->tm_min-last_min >= 1) {
-			display_panel_text_t panel_text;
-			display_tube_text_t tube_text;
-			snprintf(panel_text, 5, "%02i%02i", ts->tm_hour, ts->tm_min);
-			snprintf(tube_text, 17, "%02i.%02i.%04i", 
-					ts->tm_mday, ts->tm_mon+1, ts->tm_year+1900);
-			xSemaphoreTake(display_mutex, portMAX_DELAY);
-			display_panel_set_text(&display.panel, panel_text);
-			display_tube_set_text(&display.tube, tube_text);
-			xSemaphoreGive(display_mutex);
-			last_min = ts->tm_min;
-		}
+		display_panel_text_t panel_text;
+		display_tube_text_t tube_text;
+		snprintf(panel_text, 5, "%02i%02i", ts->tm_hour, ts->tm_min);
+		snprintf(tube_text, 17, "%02i.%02i.%04i", 
+				ts->tm_mday, ts->tm_mon+1, ts->tm_year+1900);
+		xSemaphoreTake(display_mutex, portMAX_DELAY);
+		display_panel_set_text(&display.panel, panel_text);
+		display_tube_set_text(&display.tube, tube_text);
+		display_panel_set_mnemonic(&display.panel, ts->tm_sec&1, DISPLAY_PANEL_MNEMONIC_UDOT | DISPLAY_PANEL_MNEMONIC_LDOT);
+		xSemaphoreGive(display_mutex);
+		last_min = ts->tm_min;
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }

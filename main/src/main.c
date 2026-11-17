@@ -1,9 +1,12 @@
 #include "display_driver.h"
+#include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_log.h"
 #include <time.h>
 #include <sys/time.h>
+
+#include "ds1302.h"
 
 display_t display = {};
 SemaphoreHandle_t display_mutex;
@@ -38,8 +41,23 @@ void clock_process(void *) {
 	}
 }
 
+#define DS_CLK 18
+#define DS_IO 19
+#define DS_RST 21
+
 void app_main(void)
 {
+	ds1302_t device;
+	ds1302_init(&device, DS_CLK, DS_IO, DS_RST);
+	//while (1) {
+	//	gpio_set_level(DS_RST, 0);
+	//	gpio_set_level(DS_RST, 1);
+	//}
+	ds1302_set_seconds(&device, 0);
+	while (1) {
+		ESP_LOGI("main", "Seconds: %i", ds1302_get_seconds(&device));
+		vTaskDelay(pdMS_TO_TICKS(1000));
+	}
 	struct timeval tv = { 1794409903+3600*3+180, 0 };
 	settimeofday(&tv, NULL);
 	display_mutex = xSemaphoreCreateMutex();

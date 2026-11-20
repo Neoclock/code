@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")
 
+set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
 set(CMAKE_PROJECT_INCLUDE "${CMAKE_CURRENT_LIST_DIR}/cmake/clangd_picolibc.cmake")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
